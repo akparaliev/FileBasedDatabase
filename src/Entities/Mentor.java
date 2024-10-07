@@ -2,15 +2,10 @@ package Entities;
 
 import java.io.Serializable;
 
-public class AcademyGroup implements Serializable{
+public class Mentor implements Serializable{
     private int id;
-    private String groupName;
+    private String name;
     private int academyId;
-
-    public AcademyGroup(int id, String groupName){
-        this.id = id;
-        this.groupName = groupName;
-    }
 
     public int getId() {
         return id;
@@ -19,11 +14,11 @@ public class AcademyGroup implements Serializable{
         this.id=id;
     }
 
-    public String getGroupName() {
-        return groupName;
+    public String getName() {
+        return name;
     }
-    public void setGroupName(String groupName) {
-        this.groupName=groupName;
+    public void setName(String name) {
+        this.name=name;
     }
 
     public int getAcademyId() {
