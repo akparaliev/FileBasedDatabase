@@ -10,27 +10,35 @@ import java.io.ObjectOutputStream;
 
 public class DbContext {
     private final String FILENAME;
-    
+    private boolean containsNewChanges; // it should be from global resourse file if many people use it
+    private DbSet currentDbSet;
+
     public DbContext(String filename){
         FILENAME = filename;
         createFileIfNew();
+        containsNewChanges = true; 
     }
 
     public DbSet GetDatabase() {
-        DbSet database = new DbSet();
-        try(ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(FILENAME))){
-            database = (DbSet) objectInputStream.readObject(); 
-        } catch (EOFException e) {
-           
-        } 
-        catch(IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        if (containsNewChanges) {
+            currentDbSet = new DbSet();
+            try(ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(FILENAME))){
+                currentDbSet = (DbSet) objectInputStream.readObject(); 
+            } catch (EOFException e) {
+            
+            } 
+            catch(IOException | ClassNotFoundException e) {
+                e.printStackTrace();
+            } 
+            
+            containsNewChanges = false;
         }
 
-        return database;
+        return currentDbSet;
     }
 
     public void SaveChanges(DbSet database) {
+        containsNewChanges = true;
         try (ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(FILENAME))) {
             objectOutputStream.writeObject(database); 
         } catch (IOException e) {
