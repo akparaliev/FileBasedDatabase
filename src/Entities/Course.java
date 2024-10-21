@@ -3,14 +3,19 @@ package Entities;
 import java.io.Serializable;
 
 public class Course implements Serializable {
-    private int id;
+    private String id;
     private String name;
-    private int academyId;
+    private String academyId;
 
-    public int getId() {
+    public Course(String name, String academyId) {
+        this.name = name;
+        this.academyId = academyId;
+    }
+
+    public String getId() {
         return id;
     }
-    public void setId(int id) {
+    public void setId(String id) {
         this.id=id;
     }
 
@@ -21,10 +26,10 @@ public class Course implements Serializable {
         this.name=name;
     }
 
-    public int getAcademyId() {
+    public String getAcademyId() {
         return academyId;
     }
-    public void setAcademyId(int academyId) {
+    public void setAcademyId(String academyId) {
         this.academyId=academyId;
     }
 }

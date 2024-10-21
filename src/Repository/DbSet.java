@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import javafx.util.Pair;
 
 import Entities.Academy;
 import Entities.AcademyGroup;
@@ -16,14 +17,20 @@ import Entities.Mentor;
 import Entities.MentorsToCourses;
 
 public class DbSet implements Serializable{
-    private Map<Integer,Academy> academies;
-    private Map<Integer,AcademyGroup> academyGroups;
-    private Map<Integer,Course> courses;
-    private Map<Integer,Mentor> mentors;
-    private Map<Integer,MentorsToCourses> mentorsToCourses;
+    private Map<String,Academy> academies;
+    private Map<String,AcademyGroup> academyGroups;
+    private Map<String,Course> courses;
+    private Map<String,Mentor> mentors;
+    private Map<String,MentorsToCourses> mentorsToCourses;
 
     // secondary indexes
-    private Map<Integer, Set<Integer>> academyGroupAcademyIndex = new TreeMap<>();
+    private Map<String, Set<String>> academyGroupsAcademyIndex;
+    private Map<String, Set<String>> coursesAcademyIndex;
+    private Map<String, Set<String>> mentorsAcademyIndex;
+
+    private Map<Pair<String,String>, Set<String>> courseGroupIndex;
+    private Map<Pair<String,String>, Set<String>> mentorGroupIndex;
+
 
     public DbSet() {
         academies = new HashMap<>();
@@ -31,85 +38,147 @@ public class DbSet implements Serializable{
         courses = new HashMap<>();
         mentors = new HashMap<>();
         mentorsToCourses = new HashMap<>();
+        academyGroupsAcademyIndex = new TreeMap<>();
+        coursesAcademyIndex = new TreeMap<>();
+        mentorsAcademyIndex = new TreeMap<>();
+        courseGroupIndex = new TreeMap<>();
+        mentorGroupIndex = new TreeMap<>();
     }
 
     // Academy
-    public Map<Integer,Academy> getAcademies() {
+    public Map<String,Academy> getAcademies() {
         return new HashMap<>(academies);
     }
-    public void setAcademies(Map<Integer,Academy> academies) {
+    public void setAcademies(Map<String,Academy> academies) {
         this.academies = academies;
-    }
-    public void addAcademy(Academy academy) {
-        academies.put(academy.getId(), academy);
-    }
-    public Academy getAcademy(Integer id) {
-        return academies.get(id);
     }
 
     // AcademyGroup
-    public Map<Integer,AcademyGroup> getAcademyGroups() {
+    public Map<String,AcademyGroup> getAcademyGroups() {
         return new HashMap<>(academyGroups);
     }
-    public void setAcademyGroups(Map<Integer,AcademyGroup> academyGroups) {
+    public void setAcademyGroups(Map<String,AcademyGroup> academyGroups) {
         this.academyGroups = academyGroups;
     }
-    public void addAcademyGroup(AcademyGroup academyGroup) {
-        academyGroups.put(academyGroup.getId(), academyGroup);
-        Set<Integer> indices = academyGroupAcademyIndex.getOrDefault(academyGroup.getAcademyId(), new HashSet<>());
-        indices.add(academyGroup.getId());
-        academyGroupAcademyIndex.put(academyGroup.getAcademyId(), indices);
-    }
-    public void removeAcademyGroup(int academyGroupId) {
-        academyGroups.remove(academyGroupId);
-        Set<Integer> indices = academyGroupAcademyIndex.get(academyGroups.get(academyGroupId).getAcademyId());
-        if (indices != null) {
-            indices.remove(Integer.valueOf(academyGroupId));
-            if (indices.isEmpty()) {
-                academyGroupAcademyIndex.remove(academyGroups.get(academyGroupId).getAcademyId());
-            }
+    public Set<String> getAcademyGroupAcademyIndex(String academyId) {
+        if (this.academyGroupsAcademyIndex.containsKey(academyId)) {
+            return new HashSet<>(this.academyGroupsAcademyIndex.get(academyId));
         }
+
+        return new HashSet<>();
     }
-    public void updateAcademyGroupAcademyId(int academyGroupId, int newAcademyId) {
-        AcademyGroup academyGroup = academyGroups.get(academyGroupId);
-        Set<Integer> indices = academyGroupAcademyIndex.get(academyGroup.getAcademyId());
-        if (indices != null) {
-            indices.remove(Integer.valueOf(academyGroupId));
-            academyGroupAcademyIndex.remove(academyGroup.getAcademyId());
-        }
-        Set<Integer> newIndices = academyGroupAcademyIndex.getOrDefault(newAcademyId, new HashSet<>());
-        newIndices.add(academyGroupId);
-        academyGroupAcademyIndex.put(newAcademyId, newIndices);
+
+    public void setAcademyGroupAcademyIndex(String academyId, Set<String> academyGroups) {
+        this.academyGroupsAcademyIndex.put(academyId, academyGroups);
     }
-    public List<AcademyGroup> getAcademyGroupsByAcademyId(int academyId) {
+    public List<AcademyGroup> getAcademyGroupsByAcademyId(String academyId) {
         List<AcademyGroup> result = new ArrayList<>();
-        Set<Integer> indices = academyGroupAcademyIndex.get(academyId);
+        Set<String> indices = academyGroupsAcademyIndex.get(academyId);
         if (indices != null) {
-            for (int index : indices) {
+            for (String index : indices) {
                 result.add(academyGroups.get(index));
             }
         }
         return result;
     }
 
-    public Map<Integer,Course> getCourses() {
+    // Course
+    public Map<String,Course> getCourses() {
         return new HashMap<>(courses);
     }
-    public void setCourses(Map<Integer,Course> courses) {
+    public void setCourses(Map<String,Course> courses) {
         this.courses = courses;
     }
+    public Set<String> getCoursesAcademyIndex(String academyId) {
+        if (this.coursesAcademyIndex.containsKey(academyId)) {
+            return new HashSet<>(this.coursesAcademyIndex.get(academyId));
+        }
 
-    public Map<Integer,Mentor> getMentors() {
+        return new HashSet<>();
+    }
+    public void setCoursesAcademyIndex(String academyId, Set<String> academyGroups) {
+        this.coursesAcademyIndex.put(academyId, academyGroups);
+    }
+    public List<Course> getCoursesByAcademyId(String academyId) {
+        List<Course> result = new ArrayList<>();
+        Set<String> indices = coursesAcademyIndex.get(academyId);
+        if (indices != null) {
+            for (String index : indices) {
+                result.add(courses.get(index));
+            }
+        }
+        return result;
+    }
+
+    // Mentor
+    public Map<String,Mentor> getMentors() {
         return new HashMap<>(mentors);
     }
-    public void setMentors(Map<Integer,Mentor> mentors) {
+    public void setMentors(Map<String,Mentor> mentors) {
         this.mentors = mentors;
     }
+    public Set<String> getMentorsAcademyIndex(String academyId) {
+        if (this.mentorsAcademyIndex.containsKey(academyId)) {
+            return new HashSet<>(this.mentorsAcademyIndex.get(academyId));
+        }
 
-    public Map<Integer,MentorsToCourses> getMentorsToCourses() {
+        return new HashSet<>();
+    }
+    public void setMentorsAcademyIndex(String academyId, Set<String> academyGroups) {
+        this.mentorsAcademyIndex.put(academyId, academyGroups);
+    }
+    public List<Mentor> getMentorsByAcademyId(String academyId) {
+        List<Mentor> result = new ArrayList<>();
+        Set<String> indices = mentorsAcademyIndex.get(academyId);
+        if (indices != null) {
+            for (String index : indices) {
+                result.add(mentors.get(index));
+            }
+        }
+        return result;
+    }
+
+    // MentorsToCourses
+    public Map<String,MentorsToCourses> getMentorsToCourses() {
         return new HashMap<>(mentorsToCourses);
     }
-    public void setMentorsToCourses(Map<Integer,MentorsToCourses> mentorsToCourses) {
+    public void setMentorsToCourses(Map<String,MentorsToCourses> mentorsToCourses) {
         this.mentorsToCourses = mentorsToCourses;
-    } 
+    }
+    public Set<String> getMentorsToCoursesCourseGroupIndex(String courseId, String groupId) {
+        return new HashSet<>(this.courseGroupIndex.get(new Pair<>(courseId,groupId)));
+    }
+    public void setMentorsToCoursesCourseGroupIndex(String courseId, String groupId, Set<String> mentorsToCourses) {
+        this.courseGroupIndex.put(new Pair<>(courseId,groupId), mentorsToCourses);
+    }
+    public Set<String> getMentorsToCoursesMentorGroupIndex(String mentorId, String groupId) {
+        return new HashSet<>(this.mentorGroupIndex.get(new Pair<>(mentorId, groupId)));
+    }
+    public void setMentorsToCoursesMentorGroupIndex(String mentorId, String groupId, Set<String> mentorsToCourses) {
+        this.mentorGroupIndex.put(new Pair<>(mentorId, groupId), mentorsToCourses);
+    }
+
+    public List<Mentor> getAllMentorsByCourseIdAndGroupId(String courseId, String groupId) {
+        List<Mentor> result = new ArrayList<>();
+        Set<String> indices = courseGroupIndex.get(new Pair<>(courseId, groupId));
+        if (indices != null) {
+            for (String index : indices) {
+                MentorsToCourses mentorsToCourses = this.mentorsToCourses.get(index);
+                result.add(mentors.get(mentorsToCourses.getMentorId()));
+            }
+        }
+        return result;
+    }
+
+    public List<Course> getAllCoursesByMentorIdAndGroupId(String mentorId, String groupId) {
+        List<Course> result = new ArrayList<>();
+        Set<String> indices = mentorGroupIndex.get(new Pair<>(mentorId, groupId));
+        if (indices != null) {
+            for (String index : indices) {
+                MentorsToCourses mentorsToCourses = this.mentorsToCourses.get(index);
+                result.add(courses.get(mentorsToCourses.getCourseId()));
+            }
+        }
+        return result;
+    }
 }

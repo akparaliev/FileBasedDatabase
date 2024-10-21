@@ -1,11 +1,11 @@
 package Repository;
 
-import java.util.List;
+import java.util.Map;
 
 public interface IRepository<T> {
-    List<T> GetAll();
-    T GetById(int id);
-    void Add(T entity);
+    Map<String,T> GetAll();
+    T GetById(String id);
+    String Add(T entity);
     void Update(T entity);
-    void Remove(int id);
+    void Remove(String id);
 }

@@ -3,36 +3,36 @@ package Entities;
 import java.io.Serializable;
 
 public class MentorsToCourses implements Serializable {
-    private int id;
-    private int mentorId;
-    private int courseId;
-    private int groupId;
+    private String id;
+    private String mentorId;
+    private String courseId;
+    private String groupId;
 
-    public int getId() {
+    public String getId() {
         return id;
     }
-    public void setId(int id) {
+    public void setId(String id) {
         this.id=id;
     }
 
-    public int getMentorId() {
+    public String getMentorId() {
         return mentorId;
     }
-    public void setMentorId(int mentorId) {
+    public void setMentorId(String mentorId) {
         this.mentorId=mentorId;
     }
 
-    public int getCourseId() {
+    public String getCourseId() {
         return courseId;
     }
-    public void setCourseId(int courseId) {
+    public void setCourseId(String courseId) {
         this.courseId=courseId;
     }
 
-    public int getGroupId() {
+    public String getGroupId() {
         return groupId;
     }
-    public void setGroupId(int groupId) {
+    public void setGroupId(String groupId) {
         this.groupId=groupId;
     }
 }
