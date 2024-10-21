@@ -7,12 +7,17 @@ import Repository.AcademyRepository;
 import Repository.CourseRepository;
 import Repository.DbContext;
 import Repository.MentorRepository;
+import Repository.WriteAheadLog;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        String fileName = "group.file";
+        String fileName = "db.file";
+        //DbBackup dbBackup = new DbBackup(fileName);
+        //WriteAheadLog wal = new WriteAheadLog("wal.log");
+        //dbBackup.RunEvery(30,0);
         FillData(fileName);
         PrintData(fileName);
+        System.in.read();
     }
 
     private static void FillData(String fileName) {
@@ -24,6 +29,7 @@ public class App {
 
         Academy academy = new Academy("GrowthHungry Academy - education for everyone");
         String academyId = academyRepository.Add(academy);
+        System.out.println(academyId);
 
         AcademyGroup group2024 = new AcademyGroup("group 2024", academyId);
         String group2024Id = academyGroupRepository.Add(group2024);
@@ -41,6 +47,12 @@ public class App {
         String dastanMentorId = mentorRepository.Add(dastanMentor);
         Mentor scottMentor = new Mentor("Scott Miles", academyId);
         String scottMentorId = mentorRepository.Add(scottMentor);
+        //segmentMentorA-D {nurbekMentor, dastanMentor}
+        //segmentMentorF-Z {scottMentor}
+        // B-Tree
+        //                          root
+        //  segmentMentorA-D[Updated]   segmentMentorF-Z
+        // sMA, sMB[Updated], smC 
     }
 
     private static void PrintData(String fileName) {

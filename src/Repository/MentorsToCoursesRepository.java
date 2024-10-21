@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.Set;
 
-import Entities.AcademyGroup;
 import Entities.MentorsToCourses;
 
 public class MentorsToCoursesRepository implements IRepository<MentorsToCourses> {

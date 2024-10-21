@@ -158,6 +158,9 @@ public class DbSet implements Serializable{
         this.mentorGroupIndex.put(new Pair<>(mentorId, groupId), mentorsToCourses);
     }
 
+    // give me all mentors names in CS course and in group 2024
+    // result: Nurbek, Scott
+    // process: courseGroupIndex contains pair of courseId, groupId as a key, a value it is set of mentorsToCourses(id, courseId, groupId, mentorId)
     public List<Mentor> getAllMentorsByCourseIdAndGroupId(String courseId, String groupId) {
         List<Mentor> result = new ArrayList<>();
         Set<String> indices = courseGroupIndex.get(new Pair<>(courseId, groupId));
@@ -170,6 +173,9 @@ public class DbSet implements Serializable{
         return result;
     }
 
+    // give me all courses where this mentor teaches and group id is {groupId} , Azret + group2024
+    // result: Algorithms, Math
+    // process: mentorGroupIndex contains pair of mentorId, groupId as a key, a value it is set of mentorsToCourses(id, courseId, groupId, mentorId)
     public List<Course> getAllCoursesByMentorIdAndGroupId(String mentorId, String groupId) {
         List<Course> result = new ArrayList<>();
         Set<String> indices = mentorGroupIndex.get(new Pair<>(mentorId, groupId));
