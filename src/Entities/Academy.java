@@ -24,4 +24,9 @@ public class Academy implements Serializable {
         this.description=description;
     }
 
+    @Override
+    public String toString() {
+        return getId() + " " + getDescription();
+    }
+
 }

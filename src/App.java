@@ -1,3 +1,9 @@
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
+import com.google.gson.Gson;
+
 import Entities.Academy;
 import Entities.AcademyGroup;
 import Entities.Course;
@@ -7,34 +13,38 @@ import Repository.AcademyRepository;
 import Repository.CourseRepository;
 import Repository.DbContext;
 import Repository.MentorRepository;
-import Repository.WriteAheadLog;
+import Repository.OperationType;
+import Repository.RepositoryDecorator;
+import Repository.RepositoryWALDecorator;
+import Repository.WriteAheadLogEntry;
 
 public class App {
     public static void main(String[] args) throws Exception {
-        String fileName = "db.file";
-        //DbBackup dbBackup = new DbBackup(fileName);
-        //WriteAheadLog wal = new WriteAheadLog("wal.log");
-        //dbBackup.RunEvery(30,0);
-        FillData(fileName);
-        PrintData(fileName);
+        String dfFileName = "db.file";
+        String walFileName = "wal.json";
+        FillData(dfFileName, walFileName);
+        //PrintData(dfFileName);
+        PrintFromWAL(walFileName);
         System.in.read();
     }
 
-    private static void FillData(String fileName) {
-        DbContext database = new DbContext(fileName);
-        AcademyRepository academyRepository = new AcademyRepository(database);
-        AcademyGroupRepository academyGroupRepository = new AcademyGroupRepository(database);
-        CourseRepository courseRepository = new CourseRepository(database);
-        MentorRepository mentorRepository = new MentorRepository(database);
+    private static void FillData(String dbFileName, String walFileName) {
+        DbContext database = new DbContext(dbFileName);
+        RepositoryDecorator<Academy> academyRepository = new RepositoryWALDecorator<Academy>(new AcademyRepository(database), walFileName);
+        RepositoryDecorator<AcademyGroup> academyGroupRepository = new RepositoryWALDecorator<AcademyGroup>(new AcademyGroupRepository(database), walFileName);
+        RepositoryDecorator<Course> courseRepository = new RepositoryWALDecorator<Course>(new CourseRepository(database), walFileName);
+        RepositoryDecorator<Mentor> mentorRepository = new RepositoryWALDecorator<Mentor>(new MentorRepository(database), walFileName);
 
-        Academy academy = new Academy("GrowthHungry Academy - education for everyone");
+        Academy academy = new Academy("GrowthHungry Academy 1");
         String academyId = academyRepository.Add(academy);
-        System.out.println(academyId);
 
         AcademyGroup group2024 = new AcademyGroup("group 2024", academyId);
-        String group2024Id = academyGroupRepository.Add(group2024);
+        academyGroupRepository.Add(group2024);
+        group2024.setGroupName("group 2024 is the best");
+        academyGroupRepository.Update(group2024);
         AcademyGroup group2025 = new AcademyGroup("group 2025", academyId);
         String group2025Id = academyGroupRepository.Add(group2025);
+        academyGroupRepository.Remove(group2025Id);
 
         Course csCourse = new Course("Computer Science", academyId);
         String courseId = courseRepository.Add(csCourse);
@@ -47,12 +57,6 @@ public class App {
         String dastanMentorId = mentorRepository.Add(dastanMentor);
         Mentor scottMentor = new Mentor("Scott Miles", academyId);
         String scottMentorId = mentorRepository.Add(scottMentor);
-        //segmentMentorA-D {nurbekMentor, dastanMentor}
-        //segmentMentorF-Z {scottMentor}
-        // B-Tree
-        //                          root
-        //  segmentMentorA-D[Updated]   segmentMentorF-Z
-        // sMA, sMB[Updated], smC 
     }
 
     private static void PrintData(String fileName) {
@@ -80,6 +84,34 @@ public class App {
         System.out.println("All mentors: ");
         for (Mentor mentor : mentorRepository.GetAll().values()) {
             System.out.println(mentor.getName());
+        }
+    }
+
+    private static void PrintFromWAL(String fileName) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            Gson gson = new Gson();
+
+            while ((line = reader.readLine()) != null) {
+                WriteAheadLogEntry<?> entry = gson.fromJson(line, WriteAheadLogEntry.class);
+
+                System.out.print("Operation: " + entry.getOperationType());
+                System.out.print(", class name: " + entry.getClassName());
+                switch (entry.getOperationType()) {
+                    case OperationType.UPDATE:
+                        System.out.println(", entity: " + entry.getEntity().toString());
+                        break;
+                    case OperationType.ADD:
+                        System.out.print(", id: " + entry.getId());
+                        System.out.println(", entity: " + entry.getEntity().toString());
+                        break;
+                    case OperationType.REMOVE:
+                        System.out.println(", id: " + entry.getId());
+                        break;
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -32,4 +32,9 @@ public class Mentor implements Serializable{
     public void setAcademyId(String academyId) {
         this.academyId=academyId;
     }
+
+    @Override
+    public String toString() {
+        return getId() + " " + getName();
+    }
 }
